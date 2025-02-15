@@ -1,0 +1,7 @@
+22:36:22 **** Build of configuration obj for project RISKYKVMBootloader ****
+make -j8 all 
+   text	   data	    bss	    dec	    hex	filename
+  22900	    112	   9012	  32024	   7d18	RISKYKVMBootloader.elf
+
+22:36:26 Build Finished. 0 errors, 0 warnings. (took 4s.528ms)
+

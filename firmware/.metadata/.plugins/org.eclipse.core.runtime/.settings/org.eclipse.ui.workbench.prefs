@@ -1,0 +1,4 @@
+//org.eclipse.ui.commands/state/SwitchLanguageCommand/org.eclipse.ui.commands.radioState=en
+//org.eclipse.ui.commands/state/SwitchThemeCommand/org.eclipse.ui.commands.radioState=light
+//org.eclipse.ui.commands/state/org.eclipse.ui.navigator.resources.nested.changeProjectPresentation/org.eclipse.ui.commands.radioState=false
+eclipse.preferences.version=1

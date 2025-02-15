@@ -1,0 +1,3 @@
+firmware/obj/*
+firmware/bin/*
+board/RISKYKVM-backups/** 

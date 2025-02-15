@@ -1,0 +1,7 @@
+22:36:16 **** Build of configuration obj for project RISKYKVM ****
+make -j8 all 
+   text	   data	    bss	    dec	    hex	filename
+  16976	    112	   9012	  26100	   65f4	RISKYKVM.elf
+
+22:36:20 Build Finished. 0 errors, 0 warnings. (took 4s.176ms)
+

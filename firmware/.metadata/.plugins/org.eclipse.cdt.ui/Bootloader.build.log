@@ -1,0 +1,7 @@
+22:36:11 **** Build of configuration obj for project Bootloader ****
+make -j8 all 
+   text	   data	    bss	    dec	    hex	filename
+  20156	    176	   4536	  24868	   6124	Bootloader.elf
+
+22:36:14 Build Finished. 0 errors, 0 warnings. (took 3s.570ms)
+
