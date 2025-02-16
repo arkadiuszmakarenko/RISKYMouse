@@ -56,9 +56,9 @@
 				"name": "usb_keyboard.h"
 			},
 			{
-				"name": "usb_keyboard.c",
 				"parentLogicPath": "User/USB_Host",
-				"type": "file"
+				"type": "file",
+				"name": "usb_keyboard.c"
 			}
 		],
 		"projectName": "RISKYMouse",
@@ -78,7 +78,7 @@
 				"stop_on_first_build_error": true,
 				"pre_script": "",
 				"pre_script_description": "",
-				"post_script": "cp \"$(TargetDir)RISKYMouse.bin\" \"$(TargetDir)RISKYMOUSE.UPD\"  ",
+				"post_script": "cp \"$(TargetDir)RISKYMouse.bin\" \"$(TargetDir)RISKYMOU.UPD\"  ",
 				"excludeResources": [],
 				"riscvTargetProcessor": {
 					"architecture": "rv32i",

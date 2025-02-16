@@ -4,11 +4,11 @@
  * Version            : V1.0.0
  * Date               : 2022/08/20
  * Description        : Main program body.
-*********************************************************************************
-* Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
-* Attention: This software (modified or not) and binary are used for 
-* microcontroller manufactured by Nanjing Qinheng Microelectronics.
-*******************************************************************************/
+ *********************************************************************************
+ * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
+ * Attention: This software (modified or not) and binary are used for
+ * microcontroller manufactured by Nanjing Qinheng Microelectronics.
+ *******************************************************************************/
 
 /*
  *@Note
@@ -20,7 +20,7 @@
 */
 
 #include "usb_host_iap.h"
-#include  "utils.h"
+#include "utils.h"
 
 /*********************************************************************
  * @fn      main
@@ -30,22 +30,17 @@
  * @return  none
  */
 
-int main(void)
-{
-    USART_Printf_Init( 115200 );
-    Delay_Init( );
+int main (void) {
+    USART_Printf_Init (115200);
+    Delay_Init();
     InitStuff();
-    if (!GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_14)) IAP_Jump_APP();
-    blinkLed(3,500);
+    if (!GPIO_ReadInputDataBit (GPIOA, GPIO_Pin_14))
+        IAP_Jump_APP();
+    blinkLed (3, 500);
 
-    IAP_Initialization( );
+    IAP_Initialization();
 
-    while( 1 )
-    {
-        IAP_Main_Deal( );
-
+    while (1) {
+        IAP_Main_Deal();
     }
 }
-
-
-

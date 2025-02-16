@@ -8,7 +8,7 @@ PeripheralVersion======1.0
 Description=======
 Mcu Type=CH32V20x
 Address=0x08000000
-Target Path=obj\RISKYMouseBootloader.hex
+Target Path=/home/makaron/Repo/RISKYMouse/firmware/RIKSYMouseBootloader/obj/RISKYMouseBootloader.bin
 Exe Path=
 Exe Arguments=
 CLKSpeed=1

@@ -4,8 +4,8 @@
 		{
 			"type": "mrs-debugger",
 			"request": "launch",
-			"name": "Bootloader",
-			"cwd": "/home/makaron/Repo/RISKYMouse/firmware/Bootloader",
+			"name": "RISKYMouseBootloader",
+			"cwd": "/home/makaron/Repo/RISKYMouse/firmware/RIKSYMouseBootloader",
 			"openOCDCfg": {
 				"useLocalOpenOCD": true,
 				"executable": "/usr/share/MRS2/MRS-linux-x64/resources/app/resources/linux/components/WCH/OpenOCD/OpenOCD/bin/openocd",
@@ -38,8 +38,8 @@
 					"additionalCommands": []
 				},
 				"loadedFiles": {
-					"executableFile": "/home/makaron/Repo/RISKYMouse/firmware/Bootloader/obj/Bootloader.elf",
-					"symbolFile": "/home/makaron/Repo/RISKYMouse/firmware/Bootloader/obj/Bootloader.elf",
+					"executableFile": "/home/makaron/Repo/RISKYMouse/firmware/RIKSYMouseBootloader/obj/RISKYMouseBootloader.elf",
+					"symbolFile": "/home/makaron/Repo/RISKYMouse/firmware/RIKSYMouseBootloader/obj/RISKYMouseBootloader.elf",
 					"executableFileOffset": 0,
 					"symbolFileOffset": 0
 				},
