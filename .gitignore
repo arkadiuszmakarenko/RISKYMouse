@@ -1,3 +1,4 @@
 firmware/obj/*
 firmware/bin/*
 board/RISKYKVM-backups/** 
+board/RISKYMouse-backups/*
