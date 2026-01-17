@@ -4,18 +4,21 @@
  * Version            : V1.0.0
  * Date               : 2021/06/06
  * Description        : Main Interrupt Service Routines.
-*********************************************************************************
-* Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
-* Attention: This software (modified or not) and binary are used for 
-* microcontroller manufactured by Nanjing Qinheng Microelectronics.
-*******************************************************************************/
+ *********************************************************************************
+ * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
+ * Attention: This software (modified or not) and binary are used for
+ * microcontroller manufactured by Nanjing Qinheng Microelectronics.
+ *******************************************************************************/
 #include "ch32v20x_it.h"
 #include "mouse.h"
+#include "gpio.h"
+#include "cd32gamepad.h"
 
 
-void NMI_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
-void HardFault_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
-void EXTI15_10_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
+void NMI_Handler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
+void HardFault_Handler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
+void EXTI15_10_IRQHandler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
+
 /*********************************************************************
  * @fn      NMI_Handler
  *
@@ -23,8 +26,7 @@ void EXTI15_10_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")))
  *
  * @return  none
  */
-void NMI_Handler(void)
-{
+void NMI_Handler (void) {
 }
 
 /*********************************************************************
@@ -34,20 +36,12 @@ void NMI_Handler(void)
  *
  * @return  none
  */
-void HardFault_Handler(void)
-{
-  while (1)
-  {
-  }
-}
-
-
-void EXTI15_10_IRQHandler(void)
-{
-    if(EXTI_GetITStatus(EXTI_Line10) != RESET)
-    {
-        ProcessScrollIRQ();
-        EXTI_ClearITPendingBit(EXTI_Line10); /* Clear Flag */
+void HardFault_Handler (void) {
+    while (1) {
     }
 }
 
+void EXTI15_10_IRQHandler (void) {
+    // CD32 gamepad protocol handler
+    CD32Gamepad_HandleInterrupt();
+}

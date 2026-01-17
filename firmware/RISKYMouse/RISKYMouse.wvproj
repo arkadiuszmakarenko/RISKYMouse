@@ -9,8 +9,11 @@
 			"rtos": "NoneOS",
 			"mcu": "CH32V203C8T6",
 			"description": "",
+			"artifactType": "executable",
 			"link": "WCH-Link",
-			"peripheral_version": "1.0"
+			"peripheral_version": "1.0",
+			"calibrateSupport": false,
+			"calibrateCommand": ""
 		},
 		"linkedFolders": [
 			{
@@ -80,24 +83,6 @@
 				"pre_script_description": "",
 				"post_script": "cp \"$(TargetDir)RISKYMouse.bin\" \"$(TargetDir)RISKYMOU.UPD\"  ",
 				"excludeResources": [],
-				"riscvTargetProcessor": {
-					"architecture": "rv32i",
-					"multiply_extension": true,
-					"atomic_extension": true,
-					"floating_point": "none",
-					"compressed_extension": true,
-					"extra_compressed_extension": false,
-					"bit_extension": false,
-					"multiplication_subset_of_the_M_extension": false,
-					"integer_ABI": "ilp32",
-					"floating_point_ABI": "none",
-					"tuning": "default",
-					"code_model": "default",
-					"small_data_limit": 8,
-					"align": "default",
-					"save_restore": false,
-					"other_target_flags": ""
-				},
 				"optimization": {
 					"level": "fast",
 					"message_length": true,
@@ -320,7 +305,7 @@
 				},
 				"createFlash": {
 					"enabled": true,
-					"outputFileFormat": "binary",
+					"outputFileFormat": "ihexAndbinary",
 					"copy_only_section_text": false,
 					"copy_only_section_data": false,
 					"copy_only_sections": [],
@@ -347,9 +332,27 @@
 					"show_totals": false,
 					"other_flags": ""
 				},
+				"configVariables": [],
+				"riscvTargetProcessor": {
+					"architecture": "rv32i",
+					"multiply_extension": true,
+					"atomic_extension": true,
+					"floating_point": "none",
+					"compressed_extension": true,
+					"extra_compressed_extension": false,
+					"bit_extension": false,
+					"multiplication_subset_of_the_M_extension": false,
+					"integer_ABI": "ilp32",
+					"floating_point_ABI": "none",
+					"tuning": "default",
+					"code_model": "default",
+					"small_data_limit": 8,
+					"align": "default",
+					"save_restore": false,
+					"other_target_flags": ""
+				},
 				"component_toolchain": "${WCH:Toolchain:GCC8}",
-				"name": "obj",
-				"configVariables": []
+				"name": "obj"
 			},
 			{
 				"buildArtifact": {
@@ -364,24 +367,6 @@
 				"pre_script_description": "",
 				"post_script": "cp \"$(TargetDir)RISKYKVMBoot.bin\" \"$(TargetDir)RISKYKVM.UPD\"  ",
 				"excludeResources": [],
-				"riscvTargetProcessor": {
-					"architecture": "rv32i",
-					"multiply_extension": true,
-					"atomic_extension": true,
-					"floating_point": "none",
-					"compressed_extension": true,
-					"extra_compressed_extension": false,
-					"bit_extension": false,
-					"multiplication_subset_of_the_M_extension": false,
-					"integer_ABI": "ilp32",
-					"floating_point_ABI": "none",
-					"tuning": "default",
-					"code_model": "default",
-					"small_data_limit": 8,
-					"align": "default",
-					"save_restore": false,
-					"other_target_flags": ""
-				},
 				"optimization": {
 					"level": "fast",
 					"message_length": true,
@@ -631,9 +616,27 @@
 					"show_totals": false,
 					"other_flags": ""
 				},
+				"configVariables": [],
+				"riscvTargetProcessor": {
+					"architecture": "rv32i",
+					"multiply_extension": true,
+					"atomic_extension": true,
+					"floating_point": "none",
+					"compressed_extension": true,
+					"extra_compressed_extension": false,
+					"bit_extension": false,
+					"multiplication_subset_of_the_M_extension": false,
+					"integer_ABI": "ilp32",
+					"floating_point_ABI": "none",
+					"tuning": "default",
+					"code_model": "default",
+					"small_data_limit": 8,
+					"align": "default",
+					"save_restore": false,
+					"other_target_flags": ""
+				},
 				"component_toolchain": "${WCH:Toolchain:GCC8}",
-				"name": "dbg",
-				"configVariables": []
+				"name": "dbg"
 			}
 		]
 	},
@@ -643,10 +646,10 @@
 		"target_path": "obj/RISKYMouse.hex",
 		"clkSpeed": "High",
 		"debug_interface_mode": "1-wire serial",
-		"erase": false,
-		"program": false,
-		"verify": false,
-		"reset": false,
+		"erase": true,
+		"program": true,
+		"verify": true,
+		"reset": true,
 		"sdiPrintf": false,
 		"disablepowerout": false,
 		"clearcodeflash": false,

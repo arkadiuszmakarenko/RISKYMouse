@@ -6,6 +6,7 @@
 #include "mouse.h"
 #include "gpio.h"
 #include "gamepad.h"
+#include "cd32gamepad.h"
 
 int main (void) {
     DUG_PRINTF ("SystemClk:%d\r\n", SystemCoreClock);
@@ -23,6 +24,7 @@ int main (void) {
     TIM4_Init();
     GPIO_Config();
     InitMouse();
+    CD32Gamepad_Init();
 
     while (1) {
         USBH_MainDeal();
@@ -42,7 +44,8 @@ int main (void) {
 
                     HID_gamepad_Info_TypeDef *gamepad = GetGamepadInfo (
                         &HostCtl[0].Interface[itf]);
-                    ProcessGamepad (gamepad);
+                    // ProcessGamepad (gamepad);
+                    CD32Gamepad_ProcessUSB (gamepad);
                 }
             }
         }
@@ -69,6 +72,7 @@ int main (void) {
                         HID_gamepad_Info_TypeDef *gamepad = GetGamepadInfo (
                             &HostCtl[device].Interface[itf]);
                         ProcessGamepad (gamepad);
+                        CD32Gamepad_ProcessUSB (gamepad);
                     }
                 }
             }
