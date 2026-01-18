@@ -63,21 +63,22 @@ void CD32Gamepad_ProcessUSB (HID_gamepad_Info_TypeDef *gamepad) {
 
     // Map all 7 CD32 buttons
     if (gamepad->gamepad_data & (1 << 4))
-        buttons |= (1 << 0);  // USB Button 0 -> Red (Fire 1 / Start)
+        buttons |= (1 << 1);  // USB Button 0 -> Red (Fire 1 / Start)
     if (gamepad->gamepad_data & (1 << 5))
-        buttons |= (1 << 1);  // USB Button 1 -> Blue (Fire 2 / Cancel)
+        buttons |= (1 << 6);  // USB Button 1 -> Blue (Fire 2 / Cancel)
     if (gamepad->gamepad_data & (1 << 6))
-        buttons |= (1 << 2);  // USB Button 2 -> Green
+        buttons |= (1 << 0);  // USB Button 2 -> Green
     if (gamepad->gamepad_data & (1 << 7))
-        buttons |= (1 << 3);  // USB Button 3 -> Yellow
+        buttons |= (1 << 2);  // USB Button 3 -> Yellow
 
     // Map extra buttons from gamepad_extraBtn
     if (gamepad->gamepad_extraBtn & (1 << 0))
-        buttons |= (1 << 4);  // USB Button 4 -> Shoulder Left (L)
+        buttons |= (1 << 4);  // Shoulder Left (L) OK
     if (gamepad->gamepad_extraBtn & (1 << 1))
-        buttons |= (1 << 5);  // USB Button 5 -> Shoulder Right (R)
-    if (gamepad->gamepad_extraBtn & (1 << 5))
-        buttons |= (1 << 6);  // USB Button 6 -> Play/Pause
+        buttons |= (1 << 3);  // Shoulder Right (R) ok
+    if (gamepad->gamepad_extraBtn & ((1 << 4) | (1 << 5)))
+        buttons |= (1 << 5);  // Play/Pause
+    // 1,3,4,5,6 -
 
     // Output directional pins directly
     GPIO_WriteBit (RHQ_GPIO_Port, RHQ_Pin, !(gamepad->gamepad_data & 0x1));
