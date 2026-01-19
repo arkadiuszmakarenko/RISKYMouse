@@ -15,6 +15,8 @@
 /* Header File */
 #include "usb_host_config.h"
 #include "gpio.h"
+#include "cd32gamepad.h"
+#include "mouse.h"
 
 /*******************************************************************************/
 /* Variable Definition */
@@ -1575,6 +1577,10 @@ void USBH_MainDeal( void )
         memset( &RootHubDev.bStatus, 0, sizeof( ROOT_HUB_DEVICE ) );
         memset( &HostCtl[ index ].InterfaceNum, 0, sizeof( HOST_CTL ) );
         GPIO_WriteBit(LED_GPIO_Port,LED_Pin, Bit_SET);
+        
+        /* Reset CD32 and scroll detection states */
+        CD32Gamepad_ResetDetection();
+        Mouse_ResetScrollDetection();
     }
 
     /* Get the data of the HID device connected to the USB host port */
@@ -1651,6 +1657,11 @@ void USBH_MainDeal( void )
                             {
                                 /* Re-enumerate the device and clear the endpoint again */
                                 memset( &RootHubDev.bStatus, 0, sizeof( struct _ROOT_HUB_DEVICE ) );
+                                
+                                /* Reset CD32 and scroll detection states */
+                                CD32Gamepad_ResetDetection();
+                                Mouse_ResetScrollDetection();
+                                
                                 s = USBH_EnumRootDevice( );
                                 if( s == ERR_SUCCESS )
                                 {

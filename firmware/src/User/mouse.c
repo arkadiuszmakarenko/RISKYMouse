@@ -1,5 +1,6 @@
 #include "mouse.h"
 #include "gpio.h"
+#include "usb_host_config.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -16,13 +17,42 @@ uint8_t code = 0;
 volatile uint8_t AmigaACK = 0;
 volatile uint8_t previousMMB = 0;
 
+// Scroll mode detection variables
+static volatile uint8_t scrollModeEnabled = 0;  // 0 = normal button mode, 1 = scroll mode
+static volatile uint32_t lastScrollDetectionTime = 0;  // Timestamp of last detection check
+static volatile uint16_t scrollPulseCounter = 0;  // Count pulses during detection window
+static volatile uint8_t scrollDetectionActive = 0;  // 1 during detection window
+static volatile uint8_t scrollDetectionCompleted = 0;  // 1 after detection has run once
+
+extern volatile uint32_t system_tick_ms;  // 1ms timer from TIM1
+
 
 
 void InitMouse()
 {
     //Init circular buffer
     FifoInit(&ScrollBuffer);
+    
+    // Initialize scroll detection
+    scrollModeEnabled = 0;
+    lastScrollDetectionTime = 0;
+    scrollPulseCounter = 0;
+    scrollDetectionActive = 0;
+    scrollDetectionCompleted = 0;
+}
 
+uint8_t IsMouseConnected(void)
+{
+    // Check all devices
+    for (uint8_t device = 0; device < DEF_TOTAL_ROOT_HUB * DEF_ONE_USB_SUP_DEV_TOTAL; device++) {
+        // Check all interfaces for this device
+        for (uint8_t itf = 0; itf < HostCtl[device].InterfaceNum; itf++) {
+            if (HostCtl[device].Interface[itf].HIDRptDesc.type == REPORT_TYPE_MOUSE) {
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
 
 uint8_t processMouseMovement(int8_t movementUnits, uint8_t axis, int limitRate,
@@ -190,19 +220,26 @@ void ProcessMouse(HID_MOUSE_Data *mousemap) {
 		GPIO_WriteBit(LB_GPIO_Port, LB_Pin, !(mousemap->buttons[0]));
 
 		uint8_t writeBuff = 0;
-		uint8_t  numberTics = abs(mousemap->wheel);
-		if (previousMMB == 0 && mousemap->buttons[2] == 1)
-		{
-		    writeBuff = CODE_MMB_DOWN;
-		    FifoWrite(&ScrollBuffer,&writeBuff , 1);
-		    previousMMB = 1;
+		uint8_t numberTics = abs(mousemap->wheel);
+		
+		// MB button handling depends on scroll mode
+		if (!scrollModeEnabled) {
+		    // Normal button mode - MB is output button
+		    // Middle mouse button handling with scroll codes
+		    if (previousMMB == 0 && mousemap->buttons[2] == 1)
+		    {
+		        writeBuff = CODE_MMB_DOWN;
+		        FifoWrite(&ScrollBuffer,&writeBuff , 1);
+		        previousMMB = 1;
+		    }
+		    if (previousMMB == 1 &&mousemap->buttons[2] == 0) {
+                writeBuff = CODE_MMB_UP;
+                FifoWrite(&ScrollBuffer,&writeBuff , 1);
+                FifoWrite(&ScrollBuffer,&writeBuff , 1);
+                previousMMB = 0;
+		    }
 		}
-		if (previousMMB == 1 &&mousemap->buttons[2] == 0) {
-            writeBuff = CODE_MMB_UP;
-            FifoWrite(&ScrollBuffer,&writeBuff , 1);
-            FifoWrite(&ScrollBuffer,&writeBuff , 1);
-            previousMMB = 0;
-	   }
+		// In scroll mode, MB is input, handled by interrupt
 
 
 		if (mousemap->wheel !=0)
@@ -325,6 +362,17 @@ void ProcessY_IRQ() {
 
 void ProcessScrollIRQ()
 {
+    // If in detection mode, just count pulses
+    if (scrollDetectionActive) {
+        scrollPulseCounter++;
+        return;
+    }
+    
+    // Only process scroll protocol if mode is enabled
+    if (!scrollModeEnabled) {
+        return;
+    }
+    
     uint8_t code = 0;
     uint16_t PortCurrentValueGPIOA = GPIO_ReadOutputData(GPIOA);
     uint16_t PortCurrentValueGPIOB = GPIO_ReadOutputData(GPIOB);
@@ -379,4 +427,97 @@ void ProcessScrollIRQ()
    GPIO_Write(GPIOB,PortCurrentValueGPIOB);
 }
 
+uint8_t Mouse_IsScrollModeActive(void) {
+    return scrollModeEnabled;
+}
 
+void Mouse_EnableScrollMode(void) {
+    if (scrollModeEnabled) return;  // Already enabled
+    
+    scrollModeEnabled = 1;
+    
+    // Reconfigure MB_Pin as input with interrupt for scroll pulses
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    GPIO_InitStructure.GPIO_Pin = MB_Pin;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  // Input with pull-up
+    GPIO_Init(MB_GPIO_Port, &GPIO_InitStructure);
+    
+    // Enable EXTI interrupt for MB_Pin
+    NVIC_EnableIRQ(EXTI15_10_IRQn);
+}
+
+void Mouse_DisableScrollMode(void) {
+    if (!scrollModeEnabled) return;  // Already disabled
+    
+    scrollModeEnabled = 0;
+    
+    // Reconfigure MB_Pin as output for normal mouse button
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    GPIO_InitStructure.GPIO_Pin = MB_Pin;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(MB_GPIO_Port, &GPIO_InitStructure);
+    
+    // Set to high (button not pressed)
+    GPIO_WriteBit(MB_GPIO_Port, MB_Pin, Bit_SET);
+}
+
+void Mouse_CheckForScrollPulses(void) {
+    // If detection already completed, don't run again
+    if (scrollDetectionCompleted) {
+        return;
+    }
+    
+    uint32_t currentTime = system_tick_ms;
+    
+    // Wait at least 500ms after connection before checking
+    if (currentTime - lastScrollDetectionTime < 500) {
+        return;
+    }
+    
+    lastScrollDetectionTime = currentTime;
+    scrollDetectionCompleted = 1;  // Mark detection as done
+    
+    // Start detection window: configure MB as input and start counting
+    scrollDetectionActive = 1;
+    scrollPulseCounter = 0;
+    
+    // Temporarily configure MB_Pin as input to detect pulses
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    GPIO_InitStructure.GPIO_Pin = MB_Pin;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  // Input with pull-up
+    GPIO_Init(MB_GPIO_Port, &GPIO_InitStructure);
+    
+    // Enable EXTI interrupt temporarily for pulse counting
+    NVIC_EnableIRQ(EXTI15_10_IRQn);
+    
+    // Wait 100ms to count pulses
+    uint32_t detectionStart = system_tick_ms;
+    while (system_tick_ms - detectionStart < 100) {
+        // Just wait
+    }
+    
+    scrollDetectionActive = 0;
+    
+    // Check if we detected scroll pulses (threshold: at least 3 pulses in 100ms)
+    if (scrollPulseCounter >= 3) {
+        // Scroll protocol detected - enable scroll mode
+        Mouse_EnableScrollMode();
+    } else {
+        // No scroll detected - use normal button mode
+        Mouse_DisableScrollMode();
+    }
+}
+
+void Mouse_ResetScrollDetection(void) {
+    // Reset detection state for new USB device
+    scrollDetectionCompleted = 0;
+    scrollDetectionActive = 0;
+    scrollPulseCounter = 0;
+    lastScrollDetectionTime = system_tick_ms;
+    
+    // Disable scroll mode and restore normal button
+    if (scrollModeEnabled) {
+        Mouse_DisableScrollMode();
+    }
+}

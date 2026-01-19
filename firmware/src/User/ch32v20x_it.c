@@ -13,6 +13,7 @@
 #include "mouse.h"
 #include "gpio.h"
 #include "cd32gamepad.h"
+#include "gamepad.h"
 
 
 void NMI_Handler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
@@ -42,6 +43,18 @@ void HardFault_Handler (void) {
 }
 
 void EXTI15_10_IRQHandler (void) {
-    // CD32 gamepad protocol handler
-    CD32Gamepad_HandleInterrupt();
+    // Check if gamepad is connected to determine which handler to use
+    if (IsGamepadConnected()) {
+        // Always call CD32 handler - it will handle both detection and protocol
+        CD32Gamepad_HandleInterrupt();
+    } else {
+        // Mouse scroll button handler - only process on rising edge
+        if (EXTI_GetITStatus(EXTI_Line10) != RESET) {
+            // Check if this is a rising edge (pin is now high)
+            if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_10)) {
+                ProcessScrollIRQ();
+            }
+            EXTI_ClearITPendingBit(EXTI_Line10);
+        }
+    }
 }

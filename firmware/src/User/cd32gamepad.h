@@ -30,6 +30,19 @@
 // Initialize CD32 gamepad interface
 void CD32Gamepad_Init(void);
 
+// Check if CD32 mode is currently active
+uint8_t CD32Gamepad_IsCD32ModeActive(void);
+
+// Periodic detection check (call every main loop)
+void CD32Gamepad_CheckForCD32Pulses(void);
+
+// Manually enable/disable CD32 mode
+void CD32Gamepad_EnableCD32Mode(void);
+void CD32Gamepad_DisableCD32Mode(void);
+
+// Reset detection state on USB device change
+void CD32Gamepad_ResetDetection(void);
+
 // Update CD32 button data from USB gamepad
 void CD32Gamepad_ProcessUSB(HID_gamepad_Info_TypeDef* gamepad);
 

@@ -5,5 +5,6 @@
 #include "gpio.h"
 
 void ProcessGamepad(HID_gamepad_Info_TypeDef* joymap);
+uint8_t IsGamepadConnected(void);
 
 #endif

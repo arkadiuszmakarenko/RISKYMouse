@@ -26,9 +26,17 @@
 
 
 void InitMouse();
+uint8_t IsMouseConnected(void);
 void ProcessMouse(HID_MOUSE_Data *mousemap);
 void ProcessX_IRQ();
 void ProcessY_IRQ();
 void ProcessScrollIRQ();
+
+// Scroll mode detection functions
+uint8_t Mouse_IsScrollModeActive(void);
+void Mouse_CheckForScrollPulses(void);
+void Mouse_EnableScrollMode(void);
+void Mouse_DisableScrollMode(void);
+void Mouse_ResetScrollDetection(void);
 
 #endif

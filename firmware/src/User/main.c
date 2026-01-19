@@ -22,12 +22,22 @@ int main (void) {
 
     TIM2_Init();
     TIM4_Init();
+    TIM1_Init();
     GPIO_Config();
     InitMouse();
     CD32Gamepad_Init();
 
     while (1) {
         USBH_MainDeal();
+        
+        // Check for CD32 mode detection if gamepad connected
+        if (IsGamepadConnected()) {
+            CD32Gamepad_CheckForCD32Pulses();
+        } else if (IsMouseConnected()) {
+            // Check for scroll mode detection if mouse connected (not gamepad)
+            Mouse_CheckForScrollPulses();
+        }
+        
         // Handle HID Device
         if (RootHubDev.bType == USB_DEV_CLASS_HID) {
 
@@ -44,7 +54,7 @@ int main (void) {
 
                     HID_gamepad_Info_TypeDef *gamepad = GetGamepadInfo (
                         &HostCtl[0].Interface[itf]);
-                    // ProcessGamepad (gamepad);
+                    ProcessGamepad (gamepad);
                     CD32Gamepad_ProcessUSB (gamepad);
                 }
             }
