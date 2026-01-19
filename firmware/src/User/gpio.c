@@ -99,7 +99,7 @@ void GPIO_Config() {
     GPIO_EXTILineConfig (GPIO_PortSourceGPIOB, GPIO_PinSource10);
     EXTI_InitStructure.EXTI_Line = EXTI_Line10;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init (&EXTI_InitStructure);
 

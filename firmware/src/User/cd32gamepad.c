@@ -10,8 +10,9 @@
 
 // Internal state variables
 static volatile uint8_t cd32ButtonIndex = 0;
-static volatile uint8_t cd32ButtonData = 0;
-static volatile uint8_t cd32ButtonDataLatched = 0;  // Latched data for shifting out
+static volatile uint16_t cd32ButtonData = 0;
+static volatile uint16_t cd32ButtonDataLatched = 0;  // Latched data for shifting out
+static volatile uint8_t savedPinStates = 0;          // Store GPIO states during CD32 mode
 
 /*
  * CD32 Protocol:
@@ -41,44 +42,31 @@ void CD32Gamepad_ProcessUSB (HID_gamepad_Info_TypeDef *gamepad) {
         return;
     }
 
-    uint8_t buttons = 0;
+    uint16_t buttons = 0;
 
-    // Map USB gamepad data to CD32 format
-    // USB gamepad_data bits:
-    // Bit 0-3: Directional (RIGHT, LEFT, DOWN, UP)
-    // Bit 4: USB Button 0
-    // Bit 5: USB Button 1
-    // Bit 6: USB Button 2
-    // Bit 7: USB Button 3
-    // gamepad_extraBtn bits 0-2: USB Buttons 4-6
-
-    // CD32 button order (7 bits total):
-    // Bit 0: Red (Fire 1 / Start)
-    // Bit 1: Blue (Fire 2 / Cancel)
-    // Bit 2: Green
-    // Bit 3: Yellow
-    // Bit 4: Shoulder Left (L)
-    // Bit 5: Shoulder Right (R)
-    // Bit 6: Play/Pause
 
     // Map all 7 CD32 buttons
     if (gamepad->gamepad_data & (1 << 4))
-        buttons |= (1 << 1);  // USB Button 0 -> Red (Fire 1 / Start)
+        buttons |= (1 << 2);  // USB Button 0 -> Red (Fire 1 / Start)
     if (gamepad->gamepad_data & (1 << 5))
-        buttons |= (1 << 6);  // USB Button 1 -> Blue (Fire 2 / Cancel)
+        buttons |= (1 << 0);  // USB Button 1 -> Blue (Fire 2 / Cancel)
     if (gamepad->gamepad_data & (1 << 6))
-        buttons |= (1 << 0);  // USB Button 2 -> Green
+        buttons |= (1 << 1);  // USB Button 2 -> Green
     if (gamepad->gamepad_data & (1 << 7))
-        buttons |= (1 << 2);  // USB Button 3 -> Yellow
+        buttons |= (1 << 3);  // USB Button 3 -> Yellow
 
     // Map extra buttons from gamepad_extraBtn
     if (gamepad->gamepad_extraBtn & (1 << 0))
-        buttons |= (1 << 4);  // Shoulder Left (L) OK
+        buttons |= (1 << 5);  // Shoulder Left (L) OK
     if (gamepad->gamepad_extraBtn & (1 << 1))
-        buttons |= (1 << 3);  // Shoulder Right (R) ok
+        buttons |= (1 << 4);  // Shoulder Right (R) ok
     if (gamepad->gamepad_extraBtn & ((1 << 4) | (1 << 5)))
-        buttons |= (1 << 5);  // Play/Pause
-    // 1,3,4,5,6 -
+        buttons |= (1 << 6);  // Play/Pause
+
+
+    buttons |= (1 << 8);
+    buttons |= (1 << 9);
+
 
     // Output directional pins directly
     GPIO_WriteBit (RHQ_GPIO_Port, RHQ_Pin, !(gamepad->gamepad_data & 0x1));
@@ -108,9 +96,36 @@ void CD32Gamepad_IncrementIndex (void) {
 void CD32Gamepad_HandleInterrupt (void) {
     // Latch signal (EXTI_Line10) - Start of new read cycle
     if (EXTI_GetITStatus (EXTI_Line10) != RESET) {
-        // Latch the current button data - this freezes the state for shifting
-        cd32ButtonDataLatched = cd32ButtonData;
-        CD32Gamepad_ResetIndex();
+        // Read current pin state to determine if falling or rising edge
+        uint8_t pinState = GPIO_ReadInputDataBit (MB_GPIO_Port, MB_Pin);
+
+        if (pinState == 0) {
+            // FALLING EDGE - Latch data and save GPIO states
+            cd32ButtonDataLatched = cd32ButtonData;
+            CD32Gamepad_ResetIndex();
+
+            // Save current GPIO output states for LB, RB, MB
+            savedPinStates = 0;
+            if (GPIO_ReadOutputDataBit (LB_GPIO_Port, LB_Pin))
+                savedPinStates |= (1 << 0);
+            if (GPIO_ReadOutputDataBit (RB_GPIO_Port, RB_Pin))
+                savedPinStates |= (1 << 1);
+            if (GPIO_ReadOutputDataBit (MB_GPIO_Port, MB_Pin))
+                savedPinStates |= (1 << 2);
+
+            // Output first bit (bit 0) immediately at latch
+            if (cd32ButtonDataLatched & (1 << 0)) {
+                GPIO_WriteBit (RB_GPIO_Port, RB_Pin, Bit_RESET);  // Button pressed - LOW
+            } else {
+                GPIO_WriteBit (RB_GPIO_Port, RB_Pin, Bit_SET);    // Button not pressed - HIGH
+            }
+        } else {
+            // RISING EDGE - Restore GPIO states
+            GPIO_WriteBit (LB_GPIO_Port, LB_Pin, (savedPinStates & (1 << 0)) ? Bit_SET : Bit_RESET);
+            GPIO_WriteBit (RB_GPIO_Port, RB_Pin, (savedPinStates & (1 << 1)) ? Bit_SET : Bit_RESET);
+            GPIO_WriteBit (MB_GPIO_Port, MB_Pin, (savedPinStates & (1 << 2)) ? Bit_SET : Bit_RESET);
+        }
+
         EXTI_ClearITPendingBit (EXTI_Line10);
     }
 
@@ -118,8 +133,12 @@ void CD32Gamepad_HandleInterrupt (void) {
     if (EXTI_GetITStatus (EXTI_Line15) != RESET) {
         uint8_t index = CD32Gamepad_GetButtonIndex();
 
-        // CD32 protocol sends 7 bits (0-6)
-        if (index <= 6) {
+        // CD32 protocol sends more than 7 bits for autodetection
+        if (index <= 9) {
+            // Increment index first (bit 0 was already sent at latch)
+            CD32Gamepad_IncrementIndex();
+            index = CD32Gamepad_GetButtonIndex();
+
             // Use the LATCHED data, not the live data
             // Check if current bit is set (button pressed)
             if (cd32ButtonDataLatched & (1 << index)) {
@@ -129,8 +148,6 @@ void CD32Gamepad_HandleInterrupt (void) {
                 // Button is not pressed - output HIGH
                 GPIO_WriteBit (RB_GPIO_Port, RB_Pin, Bit_SET);
             }
-
-            CD32Gamepad_IncrementIndex();
         }
 
         EXTI_ClearITPendingBit (EXTI_Line15);
