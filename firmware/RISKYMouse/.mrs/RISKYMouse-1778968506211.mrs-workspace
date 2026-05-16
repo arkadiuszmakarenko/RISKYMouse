@@ -4,13 +4,12 @@
 			"path": "."
 		},
 		{
-			"name": "RISKYMouseBootloader",
-			"path": "/home/makaron/Repo/RISKYMouse/firmware/RIKSYMouseBootloader"
+			"name": "RISKYMouse",
+			"path": "/home/makaron/Repo/RISKYMouse/firmware/RISKYMouse"
 		}
 	],
 	"settings": {
 		"mrs.workspace.type": "project",
-		"mrs.init.arg": "",
 		"files.associations": {
 			"*.c": "c",
 			"*.h": "cpp",

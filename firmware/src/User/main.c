@@ -26,8 +26,8 @@ int main (void) {
 
     while (1) {
         USBH_MainDeal();
-        // Handle HID Device
-        if (RootHubDev.bType == USB_DEV_CLASS_HID) {
+        // Handle HID/Xbox root device
+        if ((RootHubDev.bType == USB_DEV_CLASS_HID) || (RootHubDev.bType == DEF_DEV_TYPE_XBOX360)) {
 
             for (int itf = 0; itf < DEF_INTERFACE_NUM_MAX; itf++) {
                 // Handle mouse
@@ -37,8 +37,7 @@ int main (void) {
                     ProcessMouse (mousemap);
                 }
 
-                // Handle gamepad
-                if (HostCtl[0].Interface[itf].HIDRptDesc.type == REPORT_TYPE_JOYSTICK) {
+                if ((HostCtl[0].Interface[itf].HIDRptDesc.type == REPORT_TYPE_JOYSTICK) || (HostCtl[0].Interface[itf].Type == DEC_XBOX360)) {
 
                     HID_gamepad_Info_TypeDef *gamepad = GetGamepadInfo (
                         &HostCtl[0].Interface[itf]);
@@ -63,8 +62,7 @@ int main (void) {
                         ProcessMouse (mousemap);
                     }
 
-                    // Handle gamepad
-                    if (HostCtl[device].Interface[itf].HIDRptDesc.type == REPORT_TYPE_JOYSTICK) {
+                    if ((HostCtl[device].Interface[itf].HIDRptDesc.type == REPORT_TYPE_JOYSTICK) || (HostCtl[device].Interface[itf].Type == DEC_XBOX360)) {
 
                         HID_gamepad_Info_TypeDef *gamepad = GetGamepadInfo (
                             &HostCtl[device].Interface[itf]);
